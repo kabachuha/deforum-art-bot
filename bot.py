@@ -28,6 +28,13 @@ import concurrent.futures
 import asyncio
 import time
 
+import discord
+from discord.ext import commands
+
+import requests
+import typing
+import json
+
 # Blocking common core
 class Core:
     def __init__(self):
@@ -41,6 +48,8 @@ class Core:
         self.device = torch.device('cuda')
         self.safety_dtype = torch.float16
         self.pf = ProfanityFilter()
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+        self.default_config = ...
 
     def run_safety_checker(self, image):
         image_numpy = numpy.asarray(image)
@@ -62,10 +71,21 @@ class Core:
     def is_prompt_safe(self, text):
         return self.pf.is_clean(text)
 
-# Each worker is dispatched to its own running Auto1111 instance via the HTTP api
+# Each worker is dispatched to its own running Auto1111 instance via the HTTP api as an asyncio task
+# nothing blocking here
+
+# TODO: ! add support for >1 workers!
+
 class Worker:
     def __init__(self, core, api_url):
         self.core = core
         self.api_url = api_url
 
-    
+    def make_animation():
+        ...
+
+        return ...#path string
+
+
+
+
