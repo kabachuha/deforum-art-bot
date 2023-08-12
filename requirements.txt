@@ -1,0 +1,6 @@
+torch
+diffusers
+transformers
+spacy
+# you should install hunspell on your PC too
+profanity-filter[deep-analysis]
