@@ -105,6 +105,9 @@ def make_animation(deforum_settings):
         if response.status_code == 200:
             result = response.json()['outdir']
         else:
+            print(f"Bad status code {response.status_code}")
+            if response.status_code == 422:
+                print(response.json()['detail'])
             return ""
         
     except Exception as e:
