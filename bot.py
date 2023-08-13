@@ -67,25 +67,41 @@ class Safety:
             "CompVis/stable-diffusion-safety-checker",
         )
         assert torch.cuda.is_available()
-        self.device = torch.device('cpu')#torch.device('cuda')
-        self.safety_dtype = torch.float32#torch.float16
+        self.device = torch.device('cuda')#torch.device('cuda')
+        self.safety_dtype = torch.float16#torch.float16
         self.pf = ProfanityFilter()
+    
+    def numpy_to_pil(self, images):
+        if images.ndim == 3:
+            images = images[None, ...]
+        images = (images * 255).round().astype("uint8")
+        pil_images = [PIL.Image.fromarray(image) for image in images]
+        return pil_images
+    
+    def is_unsafe(self, x_image):
+        safety_checker_input = self.feature_extractor(self.numpy_to_pil(x_image), return_tensors="pt").to(self.device).to(self.safety_dtype)
+        x_checked_image, has_nsfw_concept = self.safety_checker(images=x_image, clip_input=safety_checker_input.pixel_values)
+        # assert x_checked_image.shape[0] == len(has_nsfw_concept)
+        for i in range(len(has_nsfw_concept)):
+            if has_nsfw_concept[i]:
+                return True
+        return False
 
     def run_safety_checker(self, image):
         image_numpy = numpy.asarray(image)
-        if self.safety_checker is not None:
-            safety_checker_input = self.feature_extractor(image, return_tensors="pt").to(self.device)
-            image_numpy, has_nsfw_concept = self.safety_checker(
-                images=image_numpy, clip_input=safety_checker_input.pixel_values.to(self.safety_dtype)
-            )
-        else:
-            has_nsfw_concept = None
-        return has_nsfw_concept
+        return self.is_unsafe(image_numpy)
 
-    def verify_generated_video_safety(self, path):
-        for f in tqdm(os.listdir(path)):
-            if f.endswith('.png') and self.run_safety_checker(PIL.Image.open(os.path.join(path, f))):
+    def verify_generated_video_safety(self, path, cadence=1):
+        self.safety_checker.to(self.device).to(self.safety_dtype)
+        
+        ld = os.listdir(path)
+        ld = [l for l in ld if l.endswith('.png')]
+        for i in tqdm(range(0, len(ld), cadence)):
+            f = ld[i]
+            if self.run_safety_checker(PIL.Image.open(os.path.join(path, f))):
+                self.safety_checker.to('cpu')
                 return False
+        self.safety_checker.to('cpu')
         return True
 
     def is_prompt_safe(self, text):
