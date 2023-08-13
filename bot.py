@@ -129,7 +129,7 @@ def check_animation(animation_path):
 @to_thread
 def check_words(prompts):
     global safety
-    return safety.is_prompt_safe(prompts)
+    return safety.is_prompt_safe(prompts.replace('"', "").replace("'", ""))
 
 # Simpifiled version of parse_key_frames from Deforum
 # this one converts format like `0:(lol), 20:(kek)` to prompts JSON
@@ -138,7 +138,7 @@ def parse_prompts(string, filename='unknown'):
     for match_object in string.split(","):
         frameParam = match_object.split(":")
         try:
-            frame = frameParam[0]
+            frame = frameParam[0].strip()
             frames[frame] = frameParam[1].strip()
         except SyntaxError as e:
             e.filename = filename
@@ -148,10 +148,10 @@ def parse_prompts(string, filename='unknown'):
         raise RuntimeError('Key Frame string not correctly formatted')
     return frames
 
-def find_animation(dir):
-    for f in os.listdir(dir):
+def find_animation(d):
+    for f in os.listdir(d):
         if f.endswith('.mp4'):
-            return f
+            return os.path.join(d, f)
     return ''
 
 # Starting the bot part
@@ -214,7 +214,7 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10):
                 return
             
             anim_file = find_animation(os.path.abspath(path))
-            await bot.send_file(chan, anim_file, filename="Deforum.mp4")
+            await ctx.send(file=discord.File(anim_file))
             await ctx.reply('Your animation is done!')
         else:
             print('Failed to make an animation!')
