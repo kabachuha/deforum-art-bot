@@ -66,8 +66,8 @@ class Safety:
             "CompVis/stable-diffusion-safety-checker",
         )
         assert torch.cuda.is_available()
-        self.device = torch.device('cuda')
-        self.safety_dtype = torch.float16
+        self.device = torch.device('cpu')#torch.device('cuda')
+        self.safety_dtype = torch.float32#torch.float16
         self.pf = ProfanityFilter()
 
     def run_safety_checker(self, image):
