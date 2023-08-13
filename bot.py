@@ -39,10 +39,6 @@ with open('config.json', 'r') as cfg_file:
     config = json.loads(cfg_file.read())
 assert config is not None
 
-with open('default_settings.json', 'r') as cfg_file:
-    default_settings = json.loads(cfg_file.read())
-assert default_settings is not None
-
 intents = discord.Intents.default()
 intents.messages = True
 intents.message_content = True
