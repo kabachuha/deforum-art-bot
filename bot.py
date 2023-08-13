@@ -18,6 +18,7 @@ import os, traceback, shutil
 import PIL, numpy
 
 import torch
+from tqdm import tqdm
 
 # Literally 1984
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
@@ -82,8 +83,8 @@ class Safety:
         return has_nsfw_concept
 
     def verify_generated_video_safety(self, path):
-        for f in os.listdir(path):
-            if f.endswith('.png') and self.run_safety_checker(PIL.Image.open(f)):
+        for f in tqdm(os.listdir(path)):
+            if f.endswith('.png') and self.run_safety_checker(PIL.Image.open(os.path.join(path, f))):
                 return False
         return True
 
