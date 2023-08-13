@@ -101,7 +101,7 @@ def make_animation(deforum_settings):
     request = {'settings_json':settings_json, 'allowed_params':allowed_params}
 
     try:
-        response = requests.post(config['URL'], json=request)
+        response = requests.post(config['URL'], params=request)
         if response.status_code == 200:
             result = response.json()['outdir']
         else:
