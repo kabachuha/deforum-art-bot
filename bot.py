@@ -129,7 +129,7 @@ def check_animation(animation_path):
 @to_thread
 def check_words(prompts):
     global safety
-    return safety.is_prompt_safe(prompts.replace('"', "").replace("'", ""))
+    return safety.is_prompt_safe(prompts.replace('"', "").replace("'", "").replace('(', "").replace(')', ""))
 
 # Simpifiled version of parse_key_frames from Deforum
 # this one converts format like `0:(lol), 20:(kek)` to prompts JSON
