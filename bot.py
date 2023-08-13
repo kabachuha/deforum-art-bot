@@ -201,25 +201,24 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10):
     async with semaphore:
         path = await make_animation(deforum_settings)
 
-    if len(path) > 0:
-        print('Animation made. Checking safety')
+        if len(path) > 0:
+            print('Animation made. Checking safety')
 
-        async with semaphore:
             is_safe = await check_animation(path)
 
-        if not is_safe:
-            print(f'Possible unsafe animation detected from {ctx.message.author.name} (id {ctx.message.author.id})')
-            print(f'Used prompts: {prompts}')
-            shutil.rmtree(path)
-            await ctx.reply("Possible unsafe contents detected in the animation, cannot continue")
-            return
-        
-        anim_file = find_animation(os.path.abspath(path))
-        await bot.send_file(chan, anim_file, filename="Deforum.mp4")
-        await ctx.reply('Your animation is done!')
-    else:
-        print('Failed to make an animation!')
-        traceback.print_exc()
-        await ctx.reply('Sorry, there was an error making the animation!')
+            if not is_safe:
+                print(f'Possible unsafe animation detected from {ctx.message.author.name} (id {ctx.message.author.id})')
+                print(f'Used prompts: {prompts}')
+                shutil.rmtree(path)
+                await ctx.reply("Possible unsafe contents detected in the animation, cannot continue")
+                return
+            
+            anim_file = find_animation(os.path.abspath(path))
+            await bot.send_file(chan, anim_file, filename="Deforum.mp4")
+            await ctx.reply('Your animation is done!')
+        else:
+            print('Failed to make an animation!')
+            traceback.print_exc()
+            await ctx.reply('Sorry, there was an error making the animation!')
 
 bot.run(key)
