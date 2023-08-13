@@ -80,7 +80,12 @@ class Safety:
     
     def is_unsafe(self, x_image):
         safety_checker_input = self.feature_extractor(self.numpy_to_pil(x_image), return_tensors="pt").to(self.device).to(self.safety_dtype)
-        x_checked_image, has_nsfw_concept = self.safety_checker(images=x_image, clip_input=safety_checker_input.pixel_values)
+        try:
+            x_checked_image, has_nsfw_concept = self.safety_checker(images=x_image, clip_input=safety_checker_input.pixel_values)
+        except Exception as e:
+            # HACK: the safety checker crashes on positives
+            return True
+        
         # assert x_checked_image.shape[0] == len(has_nsfw_concept)
         for i in range(len(has_nsfw_concept)):
             if has_nsfw_concept[i]:
