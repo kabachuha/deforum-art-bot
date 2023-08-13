@@ -215,6 +215,7 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10):
         await ctx.reply('Your animation is done!')
     else:
         print('Failed to make an animation!')
+        traceback.print_exc()
         await ctx.reply('Sorry, there was an error making the animation!')
 
 bot.run(key)
