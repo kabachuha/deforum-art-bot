@@ -110,6 +110,7 @@ def make_animation(deforum_settings):
     except Exception as e:
         traceback.print_exc()
         print(e)
+        return ""
 
     return result#path string
 
