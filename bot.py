@@ -158,10 +158,12 @@ def find_animation(d):
 
 @bot.event
 async def on_ready():
+    await bot.tree.sync()
     print(f'We have logged in as {bot.user}')
 
-@bot.command()
+@bot.hybrid_command(name="deforum", with_app_command=True)
 async def deforum(ctx, prompts: str = "", cadence: int = 10):
+    await bot.tree.sync()
 
     print('Received a /deforum command!')
     print(prompts)
