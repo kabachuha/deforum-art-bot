@@ -160,7 +160,7 @@ async def on_ready():
     print(f'We have logged in as {bot.user}')
 
 @bot.command()
-async def deforum(ctx, prompts: str, cadence: int = 10):
+async def deforum(ctx, prompts: str = "", cadence: int = 10):
 
     print('Received a /deforum command!')
     print(prompts)
@@ -170,26 +170,30 @@ async def deforum(ctx, prompts: str, cadence: int = 10):
 
     chan = ctx.message.channel
 
-    print('Checking if the words are safe')
+    deforum_settings = {'diffusion_cadence':cadence}
 
-    words_safe = await check_words(prompts)
+    if len(prompts) > 0:
 
-    if not words_safe:
-        print(f'Possible bad words detected from {ctx.message.author.name} (id {ctx.message.author.id})')
-        await ctx.reply("Your prompt seems to contain bad words which we can't process due to Discord's TOS, please edit it")
-        return
-    
-    print('Parsing prompts')
+        print('Checking if the words are safe')
 
-    try:
-        prompts = parse_prompts(prompts)
-    except Exception as e:
-        await ctx.reply('Error parsing prompts!')
-        return
+        words_safe = await check_words(prompts)
+
+        if not words_safe:
+            print(f'Possible bad words detected from {ctx.message.author.name} (id {ctx.message.author.id})')
+            await ctx.reply("Your prompt seems to contain bad words which we can't process due to Discord's TOS, please edit it")
+            return
+        
+        print('Parsing prompts')
+
+        try:
+            prompts = parse_prompts(prompts)
+        except Exception as e:
+            await ctx.reply('Error parsing prompts!')
+            return
+        
+        deforum_settings['prompts'] = prompts
     
     await ctx.reply('Making a Deforum animation...')
-
-    deforum_settings = {'prompts':prompts, 'diffusion_cadence':cadence}
 
     print('Making the animation')
 
