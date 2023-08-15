@@ -248,7 +248,10 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int
         if len(path) > 0:
             print('Animation made. Checking safety')
 
-            is_safe = await check_animation(path)
+            if preview_mode:
+                is_safe = True
+            else:
+                is_safe = await check_animation(path)
 
             if not is_safe:
                 print(f'Possible unsafe animation detected from {ctx.message.author.name} (id {ctx.message.author.id})')
