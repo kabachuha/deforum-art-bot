@@ -194,6 +194,8 @@ async def on_ready():
     await bot.tree.sync()
     print(f'We have logged in as {bot.user}')
 
+queue_val = 0
+
 @bot.hybrid_command(name="deforum", with_app_command=True)
 async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int = 512, fps: int = 15, seed = -1, strength_schedule: str = "0: (0.65)", preview_mode: bool = False, speed_x: str = "0: (0)", speed_y: str = "0: (0)", speed_z: str = "0: (1.75)", rotate_x:str = "0: (0)", rotate_y: str = "0: (0)", rotate_z: str = "0: (0)"):
     await bot.tree.sync()
@@ -203,6 +205,7 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int
 
     global safety
     global semaphore
+    global queue_val
 
     prompts = wrap_value(prompts)
     strength_schedule = wrap_value(strength_schedule)
@@ -238,11 +241,19 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int
         
         deforum_settings['prompts'] = prompts
     
-    await ctx.reply('Making a Deforum animation...')
+    queue_val += 1
 
-    print('Making the animation')
+    queue_msg = None
+
+    if queue_val > 1:
+        queue_msg = await ctx.reply(f'Prompts received. Your positon in the queue: {queue_val}', ephemeral=True)
 
     async with semaphore:
+        print('Making the animation')
+        queue_val -= 1
+        if queue_msg is not None:
+            await queue_msg.delete()
+        await ctx.reply('Making a Deforum animation...')
         path = await make_animation(deforum_settings)
 
         if len(path) > 0:
