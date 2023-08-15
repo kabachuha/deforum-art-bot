@@ -175,6 +175,12 @@ def find_animation(d):
             return os.path.join(d, f)
     return ''
 
+def find_settings(d):
+    for f in os.listdir(d):
+        if f.endswith('.txt'):
+            return os.path.join(d, f)
+    return ''
+
 # Starting the bot part
 
 @bot.event
@@ -183,7 +189,7 @@ async def on_ready():
     print(f'We have logged in as {bot.user}')
 
 @bot.hybrid_command(name="deforum", with_app_command=True)
-async def deforum(ctx, prompts: str = "", cadence: int = 10):
+async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int = 512, fps: int = 15, seed = -1, strength_schedule: str = "0: (0.65)", preview_mode: bool = False, speed_x: str = "0: (0)", speed_y: str = "0: (0)", speed_z: str = "0: (1.75)", rotate_x:str = "0: (0)", rotate_y: str = "0: (0)", rotate_z: str = "0: (0)"):
     await bot.tree.sync()
 
     print('Received a /deforum command!')
@@ -194,7 +200,7 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10):
 
     chan = ctx.message.channel
 
-    deforum_settings = {'diffusion_cadence':cadence}
+    deforum_settings = {'diffusion_cadence':cadence, 'W':w, 'H':h, 'fps':fps, 'seed':seed, 'strength_schedule':strength_schedule, 'motion_preview_mode':preview_mode, 'translation_x':speed_x, 'translation_y':speed_y, 'translation_z':speed_z, 'rotation_3d_x':rotate_x, 'rotation_3d_y':rotate_y, 'rotation_3d_z':rotate_z}
 
     if len(prompts) > 0:
 
@@ -238,7 +244,17 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10):
             
             anim_file = find_animation(os.path.abspath(path))
             await ctx.send(file=discord.File(anim_file))
-            await ctx.reply('Your animation is done!')
+            settings_file = find_animation(os.path.abspath(path))
+            
+            result_seed = -2
+            try:
+                with open(settings_file, 'r', encoding='utf-8') as sttn:
+                    result_settings = json.loads(sttn.read())
+                result_seed = result_settings['seed']
+            except:
+                ...
+            #await ctx.send(file=discord.File(settings_file)) # feature for selected users?
+            await ctx.reply('Your animation is done!' + (f'Seed used: {result_seed}' if result_seed != -2 else ''))
         else:
             print('Failed to make an animation!')
             traceback.print_exc()
