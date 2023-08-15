@@ -244,7 +244,7 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int
             
             anim_file = find_animation(os.path.abspath(path))
             await ctx.send(file=discord.File(anim_file))
-            settings_file = find_animation(os.path.abspath(path))
+            settings_file = find_settings(os.path.abspath(path))
             
             result_seed = -2
             try:
