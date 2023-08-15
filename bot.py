@@ -181,6 +181,12 @@ def find_settings(d):
             return os.path.join(d, f)
     return ''
 
+def wrap_value(val:str):
+    val = val.strip()
+    if len(val) > 0 and not '(' in val and not ')' in val:
+        val = f'0: ({val})'
+    return val
+
 # Starting the bot part
 
 @bot.event
@@ -197,6 +203,15 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int
 
     global safety
     global semaphore
+
+    prompts = wrap_value(prompts)
+    strength_schedule = wrap_value(strength_schedule)
+    speed_x = wrap_value(speed_x)
+    speed_y = wrap_value(speed_y)
+    speed_z = wrap_value(speed_z)
+    rotate_x = wrap_value(rotate_x)
+    rotate_y = wrap_value(rotate_y)
+    rotate_z = wrap_value(rotate_z)
 
     chan = ctx.message.channel
 
@@ -254,7 +269,7 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int
             except:
                 ...
             #await ctx.send(file=discord.File(settings_file)) # feature for selected users?
-            await ctx.reply('Your animation is done!' + (f'Seed used: {result_seed}' if result_seed != -2 else ''))
+            await ctx.reply('Your animation is done!' + (f' Seed used: {result_seed}' if result_seed != -2 else ''))
         else:
             print('Failed to make an animation!')
             traceback.print_exc()
