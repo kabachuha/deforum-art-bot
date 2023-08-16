@@ -272,7 +272,7 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int
             except:
                 ...
             #await ctx.send(file=discord.File(settings_file)) # feature for selected users?
-            await ctx.reply('Your animation is done!' + (f' Seed used: {result_seed}' if result_seed != -2 else ''))
+            await ctx.reply(('Your animation is done!' if not preview_mode else 'Your movement preview is done!') + (f' Seed used: {result_seed}' if result_seed != -2 else ''))
         else:
             print('Failed to make an animation!')
             traceback.print_exc()
