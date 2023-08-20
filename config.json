@@ -1,5 +1,6 @@
 {
     "URL": "http://127.0.0.1:7860/deforum/run",
     "patreon": "https://patreon.com/deforum",
-    "anim_waittime": 12
+    "anim_waittime": 12,
+    "true_frames_limit": 20
 }
