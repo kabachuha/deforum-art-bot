@@ -21,7 +21,7 @@ import torch
 from tqdm import tqdm
 
 # Literally 1984
-from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
+from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
 from transformers import AutoFeatureExtractor
 from profanity_filter import ProfanityFilter
 
@@ -194,6 +194,8 @@ async def on_ready():
     await bot.tree.sync()
     print(f'We have logged in as {bot.user}')
 
+bot.remove_command("help")
+
 @bot.hybrid_command(name="help", with_app_command=True)
 async def help(ctx):
     await bot.tree.sync()
@@ -202,7 +204,7 @@ async def help(ctx):
 last_usage = {}
 
 @bot.hybrid_command(name="deforum", with_app_command=True)
-async def deforum(ctx, prompts: str = "", cadence: int = 6, seed = -1, strength: str = "0: (0.65)", preview_mode: bool = False, speed_x: str = "0: (0)", speed_y: str = "0: (0)", speed_z: str = "0: (1.75)", rotate_x:str = "0: (0)", rotate_y: str = "0: (0)", rotate_z: str = "0: (0)", w:int = 1024, h: int = 1024, fps: int = 15):
+async def deforum(ctx, prompts: str = "", cadence: int = 6, seed = -1, strength: str = "0: (0.65)", preview_mode: bool = False, speed_x: str = "0: (0)", speed_y: str = "0: (0)", speed_z: str = "0: (1.75)", rotate_x:str = "0: (0)", rotate_y: str = "0: (0)", rotate_z: str = "0: (0)", w:int = 1024, h: int = 1024, fps: int = 15, frames: int = 120):
     await bot.tree.sync()
 
     print('Received a /deforum command!')
@@ -211,7 +213,7 @@ async def deforum(ctx, prompts: str = "", cadence: int = 6, seed = -1, strength:
     if sender in last_usage:
         mins = (time.time() - last_usage[sender]) / 60.0
         if mins < config['anim_waittime']:
-            await ctx.reply(f"You will be able to make an animation in {mins - config['anim_waittime']} minutes.")
+            await ctx.reply(f"You will be able to make an animation in {config['anim_waittime'] - mins} minutes.")
             return
     
     print(prompts)
@@ -230,11 +232,15 @@ async def deforum(ctx, prompts: str = "", cadence: int = 6, seed = -1, strength:
 
     chan = ctx.message.channel
 
-    deforum_settings = {'diffusion_cadence':cadence, 'W':w, 'H':h, 'fps':fps, 'seed':seed, 'strength_schedule':strength, 'motion_preview_mode':preview_mode, 'translation_x':speed_x, 'translation_y':speed_y, 'translation_z':speed_z, 'rotation_3d_x':rotate_x, 'rotation_3d_y':rotate_y, 'rotation_3d_z':rotate_z}
+    deforum_settings = {'diffusion_cadence':cadence, 'W':w, 'H':h, 'fps':fps, 'seed':seed, 'frames':frames, 'strength_schedule':strength, 'motion_preview_mode':preview_mode, 'translation_x':speed_x, 'translation_y':speed_y, 'translation_z':speed_z, 'rotation_3d_x':rotate_x, 'rotation_3d_y':rotate_y, 'rotation_3d_z':rotate_z}
 
-    # sanity check
-    if cadence < 6 or w > 1024 or h > 1024 or fps < 1:
+    # sanity checks
+    if cadence < 6 or w > 1024 or h > 1024 or fps < 1 or frames < 1:
         await ctx.reply("Cadence must be greater than 5, width and height can't be larger than 1024 and fps not less than 1")
+        return
+    
+    if frames / cadence > config['true_frames_limit']:
+        await ctx.reply(f"With Cadence {cadence} the length of the animation is limited by {cadence * config['true_frames_limit']} frames")
         return
 
     if len(prompts) > 0:
