@@ -194,18 +194,33 @@ async def on_ready():
     await bot.tree.sync()
     print(f'We have logged in as {bot.user}')
 
+@bot.hybrid_command(name="help", with_app_command=True)
+async def help(ctx):
+    await bot.tree.sync()
+    await ctx.reply(f'This is the Deforum bot for making SDXL animations. You can make one animation per {config["anim_waittime"]} minutes. The command should follow the format: `/deforum prompts cadence seed strength preview_mode speed_x speed_y speed_z rotate_x rotate_y rotate_z w h fps` Example: `/deforum "cute cat --neg cartoon" 10 6934 0.65 false 0 0 "0:(0.1), 50:(0.175)" 0 -0.1 0 1024 768 24` To not waste your attempt, you can make a dry run to show the movement. If you like this bot and want to make it accessible for more users, consider supporting us on Patreon {config["patreon"]}')
+
+last_usage = {}
+
 @bot.hybrid_command(name="deforum", with_app_command=True)
-async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int = 512, fps: int = 15, seed = -1, strength_schedule: str = "0: (0.65)", preview_mode: bool = False, speed_x: str = "0: (0)", speed_y: str = "0: (0)", speed_z: str = "0: (1.75)", rotate_x:str = "0: (0)", rotate_y: str = "0: (0)", rotate_z: str = "0: (0)"):
+async def deforum(ctx, prompts: str = "", cadence: int = 6, seed = -1, strength: str = "0: (0.65)", preview_mode: bool = False, speed_x: str = "0: (0)", speed_y: str = "0: (0)", speed_z: str = "0: (1.75)", rotate_x:str = "0: (0)", rotate_y: str = "0: (0)", rotate_z: str = "0: (0)", w:int = 1024, h: int = 1024, fps: int = 15):
     await bot.tree.sync()
 
     print('Received a /deforum command!')
+    
+    sender = ctx.message.author.id
+    if sender in last_usage:
+        mins = (time.time() - last_usage[sender]) / 60.0
+        if mins < config['anim_waittime']:
+            await ctx.reply(f"You will be able to make an animation in {mins - config['anim_waittime']} minutes.")
+            return
+    
     print(prompts)
 
     global safety
     global semaphore
 
     prompts = wrap_value(prompts)
-    strength_schedule = wrap_value(strength_schedule)
+    strength = wrap_value(strength)
     speed_x = wrap_value(speed_x)
     speed_y = wrap_value(speed_y)
     speed_z = wrap_value(speed_z)
@@ -215,7 +230,12 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int
 
     chan = ctx.message.channel
 
-    deforum_settings = {'diffusion_cadence':cadence, 'W':w, 'H':h, 'fps':fps, 'seed':seed, 'strength_schedule':strength_schedule, 'motion_preview_mode':preview_mode, 'translation_x':speed_x, 'translation_y':speed_y, 'translation_z':speed_z, 'rotation_3d_x':rotate_x, 'rotation_3d_y':rotate_y, 'rotation_3d_z':rotate_z}
+    deforum_settings = {'diffusion_cadence':cadence, 'W':w, 'H':h, 'fps':fps, 'seed':seed, 'strength_schedule':strength, 'motion_preview_mode':preview_mode, 'translation_x':speed_x, 'translation_y':speed_y, 'translation_z':speed_z, 'rotation_3d_x':rotate_x, 'rotation_3d_y':rotate_y, 'rotation_3d_z':rotate_z}
+
+    # sanity check
+    if cadence < 6 or w > 1024 or h > 1024 or fps < 1:
+        await ctx.reply("Cadence must be greater than 5, width and height can't be larger than 1024 and fps not less than 1")
+        return
 
     if len(prompts) > 0:
 
@@ -273,6 +293,10 @@ async def deforum(ctx, prompts: str = "", cadence: int = 10, w:int = 512, h: int
                 ...
             #await ctx.send(file=discord.File(settings_file)) # feature for selected users?
             await ctx.reply(('Your animation is done!' if not preview_mode else 'Your movement preview is done!') + (f' Seed used: {result_seed}' if result_seed != -2 else ''))
+            
+            # don't waste the credits if preview mode is on
+            if not preview_mode:
+                last_usage[sender] = time.time()
         else:
             print('Failed to make an animation!')
             traceback.print_exc()
